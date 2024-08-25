@@ -14,7 +14,7 @@ function startVideo() {
             video1.srcObject = stream;
             video1.onloadedmetadata = () => {
                 video1.play();
-                startFaceDetection(video1, "canvas1");
+                startFaceDetection(video1, "ipcamCanvas");
             };
         })
         .catch(err => {
@@ -22,7 +22,7 @@ function startVideo() {
             alert("Could not access the webcam. Please check your browser settings.");
         });
 
-    refreshIpCam(); // Start the IP camera stream
+    setupIpCam(); // Setup the IP camera feed
 }
 
 // Function to start face detection on a video source
@@ -35,7 +35,7 @@ function startFaceDetection(video, canvasId) {
         const displaySize = { width: video.videoWidth, height: video.videoHeight };
         faceapi.matchDimensions(canvas, displaySize);
 
-        setInterval(async () => {
+        setInterval(async() => {
             if (video.videoWidth !== 0 && video.videoHeight !== 0) { // Ensure dimensions are valid
                 const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks()
@@ -51,18 +51,29 @@ function startFaceDetection(video, canvasId) {
     });
 }
 
-// Function to refresh the IP camera image every second and apply face detection
-function refreshIpCam() {
-    const ipCam = document.getElementById('ipcam');
-    ipCam.src = `http://192.168.118.90:8080/video?${new Date().getTime()}`; // Append a timestamp to avoid caching
+// Function to setup and process IP camera feed
+function setupIpCam() {
+    const ipcamCanvas = document.getElementById('ipcamCanvas');
+    const ipcamContext = ipcamCanvas.getContext('2d');
+    const ipcam = new Image();
+    ipcam.crossOrigin = 'Anonymous'; // Handle CORS issues
 
-    ipCam.onload = () => {
-        if (ipCam.naturalWidth !== 0 && ipCam.naturalHeight !== 0) {
-            startFaceDetection(ipCam, "canvas2"); // Start face detection on the IP camera feed
-        }
+    // Refresh the IP camera feed every second
+    function refreshIpCam() {
+        ipcam.src = `http://192.168.118.90:8080/video?${new Date().getTime()}`;
+    }
+
+    ipcam.onload = () => {
+        ipcamCanvas.width = ipcam.naturalWidth;
+        ipcamCanvas.height = ipcam.naturalHeight;
+        ipcamContext.drawImage(ipcam, 0, 0, ipcamCanvas.width, ipcamCanvas.height);
+        startFaceDetection(ipcamCanvas, "canvas2");
     };
 
-    setInterval(() => {
-        ipCam.src = `http://192.168.118.90:8080/video?${new Date().getTime()}`;
-    }, 1000); // Refresh every second
+    ipcam.onerror = () => {
+        console.error("Error loading IP camera feed.");
+    };
+
+    refreshIpCam();
+    setInterval(refreshIpCam, 1000); // Refresh every second
 }
