@@ -1,82 +1,92 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, Network, Brain, Lock, BarChart3, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
 import { useThemeStore } from '../store/useThemeStore';
 import { useAlertStore } from '../store/useAlertStore';
 import { useNetworkStore } from '../store/useNetworkStore';
 import { MLStatus } from './MLStatus';
 
-// Simulated network packets for demonstration
-const simulatedPackets = [
-  {
-    sourceIP: '192.168.1.100',
-    destinationIP: '203.0.113.0',
-    protocol: 'TCP',
-    bytesTransferred: 1500,
-    packetsPerSecond: 100,
-    averagePacketSize: 1024,
-    connectionDuration: 30,
-    portNumber: 443
-  },
-  {
-    sourceIP: '192.168.1.150',
-    destinationIP: '198.51.100.0',
-    protocol: 'HTTP',
-    bytesTransferred: 5000,
-    packetsPerSecond: 500,
-    averagePacketSize: 512,
-    connectionDuration: 15,
-    portNumber: 80
-  }
-];
+interface UniqueAlert {
+  id: string;
+  type: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  count: number;
+  latestTimestamp: string;
+  description: string;
+  source_ip?: string;
+  destination_ip?: string;
+  protocol?: string;
+  confidence: number;
+}
 
 export const Dashboard: React.FC = () => {
   const { isDarkMode } = useThemeStore();
   const { alerts, filterAlerts } = useAlertStore();
   const { analyzePacket, isInitialized } = useNetworkStore();
+  const [uniqueAlerts, setUniqueAlerts] = useState<UniqueAlert[]>([]);
   
-  const activeAlerts = filterAlerts(undefined, 'new');
-  const criticalAlerts = filterAlerts('critical');
-
-  // Simulate real-time packet analysis
   useEffect(() => {
-    if (!isInitialized) return;
+    // Group similar alerts together
+    const alertMap = new Map<string, UniqueAlert>();
+    
+    alerts.forEach(alert => {
+      const key = `${alert.type}-${alert.severity}-${alert.source_ip}-${alert.destination_ip}`;
+      
+      if (alertMap.has(key)) {
+        const existing = alertMap.get(key)!;
+        alertMap.set(key, {
+          ...existing,
+          count: existing.count + 1,
+          latestTimestamp: alert.timestamp,
+          confidence: Math.max(existing.confidence, alert.confidence)
+        });
+      } else {
+        alertMap.set(key, {
+          id: alert.id,
+          type: alert.type,
+          severity: alert.severity,
+          count: 1,
+          latestTimestamp: alert.timestamp,
+          description: alert.description,
+          source_ip: alert.source_ip,
+          destination_ip: alert.destination_ip,
+          protocol: alert.protocol,
+          confidence: alert.confidence
+        });
+      }
+    });
 
-    const interval = setInterval(() => {
-      const randomPacket = simulatedPackets[Math.floor(Math.random() * simulatedPackets.length)];
-      analyzePacket({
-        ...randomPacket,
-        bytesTransferred: randomPacket.bytesTransferred * (0.5 + Math.random()),
-        packetsPerSecond: randomPacket.packetsPerSecond * (0.5 + Math.random()),
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, [isInitialized, analyzePacket]);
+    setUniqueAlerts(Array.from(alertMap.values())
+      .sort((a, b) => {
+        const severityOrder = { critical: 4, high: 3, medium: 2, low: 1 };
+        return severityOrder[b.severity] - severityOrder[a.severity];
+      })
+      .slice(0, 5)); // Show only top 5 most severe alerts
+  }, [alerts]);
 
   const stats = [
     {
       title: 'Active Threats',
-      value: activeAlerts.length,
+      value: uniqueAlerts.length,
       icon: AlertTriangle,
       color: 'text-red-500'
     },
     {
       title: 'Network Health',
-      value: '98%',
+      value: `${Math.max(0, 100 - uniqueAlerts.length * 5)}%`,
       icon: Network,
-      color: 'text-green-500'
+      color: 'text-emerald-500'
     },
     {
-      title: 'ML Accuracy',
-      value: '95.6%',
-      icon: Brain,
-      color: 'text-blue-500'
-    },
-    {
-      title: 'Assets Protected',
+      title: 'Protected Assets',
       value: '1,893',
       icon: Lock,
-      color: 'text-indigo-500'
+      color: 'text-emerald-500'
+    },
+    {
+      title: 'Detection Rate',
+      value: '99.2%',
+      icon: Brain,
+      color: 'text-emerald-500'
     }
   ];
 
@@ -101,13 +111,13 @@ export const Dashboard: React.FC = () => {
           <div className={`${isDarkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow`}>
             <div className={`p-6 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Real-Time Threat Detection</h2>
+                <h2 className="text-xl font-semibold">Active Security Threats</h2>
                 <BarChart3 className={`h-6 w-6 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`} />
               </div>
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {alerts.map(alert => (
+                {uniqueAlerts.map(alert => (
                   <div 
                     key={alert.id} 
                     className={`flex items-center justify-between ${isDarkMode ? 'bg-gray-700' : 'bg-gray-50'} p-4 rounded-lg`}
@@ -121,7 +131,15 @@ export const Dashboard: React.FC = () => {
                         <CheckCircle2 className="h-6 w-6 text-yellow-500" />
                       )}
                       <div>
-                        <h3 className="font-medium">{alert.type}</h3>
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-medium">{alert.type}</h3>
+                          <span className={`
+                            px-2 py-1 rounded-full text-xs
+                            ${alert.count > 1 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}
+                          `}>
+                            {alert.count} {alert.count === 1 ? 'occurrence' : 'occurrences'}
+                          </span>
+                        </div>
                         <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                           {alert.description}
                         </p>
@@ -137,7 +155,7 @@ export const Dashboard: React.FC = () => {
                         </div>
                         <div className={`flex items-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                           <Clock className="h-4 w-4 mr-1" />
-                          {new Date(alert.timestamp).toLocaleTimeString()}
+                          {new Date(alert.latestTimestamp).toLocaleTimeString()}
                         </div>
                       </div>
                     </div>
