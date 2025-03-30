@@ -4,9 +4,11 @@ import { Navbar } from './components/Navbar';
 import { Dashboard } from './components/Dashboard';
 import { ThreatAnalysis } from './components/ThreatAnalysis';
 import { NetworkTraffic } from './components/NetworkTraffic';
+import { FirewallAnalysis } from './components/FirewallAnalysis';
 import { MLInsights } from './components/MLInsights';
 import { EventHistory } from './components/EventHistory';
 import { Settings } from './components/Settings';
+import { Footer } from './components/Footer';
 import { useThemeStore } from './store/useThemeStore';
 
 function App() {
@@ -22,15 +24,17 @@ function App() {
               <Route path="/" element={<Dashboard />} />
               <Route path="/threats" element={<ThreatAnalysis />} />
               <Route path="/network" element={<NetworkTraffic />} />
+              <Route path="/firewall" element={<FirewallAnalysis />} />
               <Route path="/ml-insights" element={<MLInsights />} />
               <Route path="/history" element={<EventHistory />} />
               <Route path="/settings" element={<Settings />} />
             </Routes>
           </div>
+          <Footer />
         </div>
       </div>
     </Router>
   );
 }
 
-export default App
+export default App;
