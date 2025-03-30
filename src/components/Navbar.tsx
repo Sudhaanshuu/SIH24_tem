@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, Activity, Brain, AlertTriangle, Settings, History, Database, Network } from 'lucide-react';
+import { Shield, Activity, Brain, AlertTriangle, Settings, History, Network, Shield as ShieldIcon } from 'lucide-react';
 import { useThemeStore } from '../store/useThemeStore';
 import { Link, useLocation } from 'react-router-dom';
 
@@ -11,6 +11,7 @@ export const Navbar: React.FC = () => {
     { path: '/', icon: Activity, label: 'Dashboard' },
     { path: '/threats', icon: AlertTriangle, label: 'Threat Analysis' },
     { path: '/network', icon: Network, label: 'Network Traffic' },
+    { path: '/firewall', icon: ShieldIcon, label: 'Firewall Analysis' },
     { path: '/ml-insights', icon: Brain, label: 'ML Insights' },
     { path: '/history', icon: History, label: 'Event History' },
     { path: '/settings', icon: Settings, label: 'Settings' },
@@ -22,7 +23,7 @@ export const Navbar: React.FC = () => {
     <nav className={`fixed left-0 top-0 h-full w-64 ${isDarkMode ? 'bg-gray-900' : 'bg-white'} shadow-lg`}>
       <div className="p-6">
         <div className="flex items-center space-x-3 mb-8">
-          <Shield className="h-8 w-8 text-indigo-500" />
+          <Shield className="h-8 w-8 text-emerald-500" />
           <h1 className="text-xl font-bold">Raksha Netra</h1>
         </div>
 
@@ -34,7 +35,7 @@ export const Navbar: React.FC = () => {
               className={`
                 flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
                 ${isActive(item.path)
-                  ? `${isDarkMode ? 'bg-indigo-500' : 'bg-indigo-100'} text-indigo-700`
+                  ? `${isDarkMode ? 'bg-emerald-500' : 'bg-emerald-100'} text-emerald-700`
                   : `${isDarkMode ? 'text-gray-400 hover:bg-gray-800' : 'text-gray-600 hover:bg-gray-100'}`
                 }
               `}
@@ -48,10 +49,10 @@ export const Navbar: React.FC = () => {
 
       <div className={`absolute bottom-0 left-0 right-0 p-6 ${isDarkMode ? 'bg-gray-800' : 'bg-gray-50'}`}>
         <div className="flex items-center space-x-3">
-          <Database className="h-5 w-5 text-green-500" />
+          <Network className="h-5 w-5 text-emerald-500" />
           <div className="text-sm">
             <div className={isDarkMode ? 'text-gray-400' : 'text-gray-600'}>System Status</div>
-            <div className="font-medium">Healthy</div>
+            <div className="font-medium">Protected</div>
           </div>
         </div>
       </div>
