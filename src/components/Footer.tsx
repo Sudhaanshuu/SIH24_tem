@@ -21,7 +21,7 @@ export const Footer: React.FC = () => {
 
           <div className="flex items-center space-x-6">
             <a
-              href="https://github.com/sudhanshu"
+              href="https://github.com/sudhaanshuu"
               target="_blank"
               rel="noopener noreferrer"
               className={`hover:text-emerald-500 transition-colors ${
@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
               <Github className="h-5 w-5" />
             </a>
             <a
-              href="mailto:contact@example.com"
+              href="mailto:sudhaanshuu@gmail.com"
               className={`hover:text-emerald-500 transition-colors ${
                 isDarkMode ? 'text-gray-400' : 'text-gray-600'
               }`}
@@ -39,7 +39,7 @@ export const Footer: React.FC = () => {
               <Mail className="h-5 w-5" />
             </a>
             <a
-              href="https://linkedin.com/in/sudhanshu"
+              href="https://linkedin.com/in/sudhanshuu"
               target="_blank"
               rel="noopener noreferrer"
               className={`hover:text-emerald-500 transition-colors ${
